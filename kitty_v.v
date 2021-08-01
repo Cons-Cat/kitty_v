@@ -28,14 +28,14 @@ type KittyOptions = map[string]string
 
 type KittyImageData = []byte | string
 
-// Value of `f` key
+// Values of `f` key
 enum KittyImageFormat {
 	rgb = 24
 	rgba = 32
 	png = 100
 }
 
-// Value of `t` key
+// Values of `t` key
 enum KittyTransmissionMedium {
 	file = 70 // `f`
 	direct_data = 104 // `d`
@@ -45,11 +45,12 @@ enum KittyTransmissionMedium {
 
 // https://sw.kovidgoyal.net/kitty/graphics-protocol
 fn print_image_kitty(image_data string, image_options KittyOptions) {
+	mut out := os.stdout()
 	empty_options := map[string]string{}
 	mut b64_data := base64.encode_str(image_data)
 
 	// Print the first chunk, with image_options.
-	print(serialize_gr_command(b64_data[..4096], 1, image_options))
+	out.write(serialize_gr_command(b64_data[..4096], 1, image_options)) or { panic(err) }
 
 	// Print remaining chunks, without options.
 	for {
@@ -58,19 +59,20 @@ fn print_image_kitty(image_data string, image_options KittyOptions) {
 		chunk := if b64_data.len > 4096 { b64_data[..4096] } else { b64_data[..b64_data.len] }
 		// m is 0 iff the encoded data is the final chunk.
 		if b64_data.len > 4096 {
-			print(serialize_gr_command(chunk, 1, empty_options))
+			out.write(serialize_gr_command(chunk, 1, empty_options)) or { panic(err) }
 		} else {
-			print(serialize_gr_command(chunk, 0, empty_options))
-			return
+			out.write(serialize_gr_command(chunk, 0, empty_options)) or { panic(err) }
+			break
 		}
 	}
+	os.flush()
 }
 
 // Put an array of bytes in the form Kitty reads.
-fn serialize_gr_command(payload string, m int, image_options KittyOptions) string {
+fn serialize_gr_command(payload string, m int, image_options KittyOptions) []byte {
 	mut serialized_options := 'm=$m' // Chunk type
 	for key, value in image_options {
 		serialized_options += ',$key=$value'
 	}
-	return '\033_G' + '$serialized_options' + ';' + '$payload' + '\033\\'
+	return ('\033_G$serialized_options;$payload\033\\').bytes()
 }
