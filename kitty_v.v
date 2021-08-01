@@ -45,8 +45,6 @@ enum KittyTransmissionMedium {
 
 // https://sw.kovidgoyal.net/kitty/graphics-protocol
 fn print_image_kitty(image_data string, image_options KittyOptions) {
-	// Print a image in the form of:
-	// <ESC>_Gf=$image_format,a=T,t=d,s=$width,v=$height;<payload><ESC>\
 	empty_options := map[string]string{}
 	mut b64_data := base64.encode_str(image_data)
 
@@ -57,7 +55,7 @@ fn print_image_kitty(image_data string, image_options KittyOptions) {
 	for {
 		// 4096 is the maximum size of a well behaving chunk.
 		b64_data = b64_data[4096..]
-		chunk := b64_data[..4096]
+		chunk := if b64_data.len > 4096 { b64_data[..4096] } else { b64_data[..b64_data.len] }
 		// m is 0 iff the encoded data is the final chunk.
 		if b64_data.len > 4096 {
 			print(serialize_gr_command(chunk, 1, empty_options))
@@ -74,5 +72,5 @@ fn serialize_gr_command(payload string, m int, image_options KittyOptions) strin
 	for key, value in image_options {
 		serialized_options += ',$key=$value'
 	}
-	return '\033_G' + '$serialized_options' + ';' + '$payload' + '\033\'
+	return '\033_G' + '$serialized_options' + ';' + '$payload' + '\033\\'
 }
