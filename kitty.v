@@ -6,7 +6,6 @@ import encoding.base64
 fn main() {
 	mut fp := flag.new_flag_parser(os.args)
 	fp.application('Kitty PNG fp')
-	// viewer.limit_free_args(0, 0)
 	fp.skip_executable()
 	image_path := fp.string('path', 0, '', 'Relative path to a PNG.')
 	fp.finalize() or {
@@ -14,19 +13,15 @@ fn main() {
 		println(fp.usage())
 		return
 	}
-	// image_data := os.read_bytes(image_path) or { panic('Could not open a PNG at $image_path') }
 	image_data := os.read_file(image_path) or { panic('Could not open a PNG at $image_path') }
 	options := map{
 		'a': 'T'
 		'f': int(KittyImageFormat.png).str()
 	}
-	// print_image_kitty(image_path, options)
 	print_image_kitty(image_data, options)
 }
 
 type KittyOptions = map[string]string
-
-type KittyImageData = []byte | string
 
 // Values of `f` key
 enum KittyImageFormat {
@@ -49,15 +44,15 @@ fn print_image_kitty(image_data string, image_options KittyOptions) {
 	empty_options := map[string]string{}
 	mut b64_data := base64.encode_str(image_data)
 
-	// Print the first chunk, with image_options.
+	// Print the first chunk with image_options.
 	out.write(serialize_gr_command(b64_data[..4096], 1, image_options)) or { panic(err) }
 
-	// Print remaining chunks, without options.
+	// Print remaining chunks without options.
 	for {
 		// 4096 is the maximum size of a well behaving chunk.
 		b64_data = b64_data[4096..]
 		chunk := if b64_data.len > 4096 { b64_data[..4096] } else { b64_data[..b64_data.len] }
-		// m is 0 iff the encoded data is the final chunk.
+		// m == 0 iff the encoded data is the final chunk.
 		if b64_data.len > 4096 {
 			out.write(serialize_gr_command(chunk, 1, empty_options)) or { panic(err) }
 		} else {
@@ -70,7 +65,8 @@ fn print_image_kitty(image_data string, image_options KittyOptions) {
 
 // Put an array of bytes in the form Kitty reads.
 fn serialize_gr_command(payload string, m int, image_options KittyOptions) []byte {
-	mut serialized_options := 'm=$m' // Chunk type
+	// Compiling with -prealloc is required to optimize this.
+	mut serialized_options := 'm=$m' // m == 0 if this is the final chunk.
 	for key, value in image_options {
 		serialized_options += ',$key=$value'
 	}
