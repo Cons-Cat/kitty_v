@@ -1,0 +1,8 @@
+# Binaries for programs and plugins
+main
+kitty_v
+*.exe
+*.exe~
+*.so
+*.dylib
+*.dll
