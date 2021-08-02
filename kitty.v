@@ -43,27 +43,25 @@ fn print_image_kitty(image_data string, image_options KittyOptions) {
 	mut out := os.stdout()
 	empty_options := map[string]string{}
 	mut b64_data := base64.encode_str(image_data)
-	mut chunk_buffer := ChunkBuffer{}
-
-	chunk_buffer.data = []byte{len: 0, cap: 4128, init: 0}
+	mut chunk_buffer := []byte{len: 0, cap: 4128, init: 0}
 
 	// Print the first chunk with image_options.
 	serialize_gr_command(b64_data[..4096], 1, image_options, mut chunk_buffer)
-	out.write(chunk_buffer.data) or { panic(err) }
+	out.write(chunk_buffer) or { panic(err) }
 
 	// Print remaining chunks without options.
 	for {
-		chunk_buffer.data.clear()
+		chunk_buffer.clear()
 		// 4096 is the maximum size of a well behaving chunk.
 		b64_data = b64_data[4096..]
 		chunk := if b64_data.len > 4096 { b64_data[..4096] } else { b64_data[..b64_data.len] }
 		// m == 0 iff the encoded data is the final chunk.
 		if b64_data.len > 4096 {
 			serialize_gr_command(chunk, 1, empty_options, mut chunk_buffer)
-			out.write(chunk_buffer.data) or { panic(err) }
+			out.write(chunk_buffer) or { panic(err) }
 		} else {
 			serialize_gr_command(chunk, 0, empty_options, mut chunk_buffer)
-			out.write(chunk_buffer.data) or { panic(err) }
+			out.write(chunk_buffer) or { panic(err) }
 			break
 		}
 	}
@@ -71,23 +69,10 @@ fn print_image_kitty(image_data string, image_options KittyOptions) {
 }
 
 // Put an array of bytes in the form Kitty reads.
-fn serialize_gr_command(payload string, m int, image_options KittyOptions, mut buffer ChunkBuffer) {
-	buffer.write('\033_G')
-	serialized_options := 'm=$m' // m == 0 if this is the final chunk.
-	buffer.write(serialized_options)
+fn serialize_gr_command(payload string, m int, image_options KittyOptions, mut buffer []byte) {
+	buffer << '\033_Gm=$m'.bytes()
 	for key, value in image_options {
-		current_option := ',$key=$value'
-		buffer.write(current_option)
+		buffer << ',$key=$value'.bytes()
 	}
-	str := ';$payload\033\\'
-	buffer.write(str)
-}
-
-struct ChunkBuffer {
-mut:
-	data []byte
-}
-
-fn (mut buffer ChunkBuffer) write(source &string) {
-	buffer.data << source.bytes()
+	buffer << ';$payload\033\\'.bytes()
 }
