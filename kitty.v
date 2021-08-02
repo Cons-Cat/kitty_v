@@ -43,6 +43,7 @@ fn print_image_kitty(image_data string, image_options KittyOptions) {
 	mut out := os.stdout()
 	empty_options := map[string]string{}
 	mut b64_data := base64.encode_str(image_data)
+	mut b64_pos := 0
 	mut chunk_buffer := []byte{len: 0, cap: 4128, init: 0}
 
 	// Print the first chunk with image_options.
@@ -52,15 +53,21 @@ fn print_image_kitty(image_data string, image_options KittyOptions) {
 	// Print remaining chunks without options.
 	for {
 		chunk_buffer.clear()
+		b64_pos += 4096
 		// 4096 is the maximum size of a well behaving chunk.
-		b64_data = b64_data[4096..]
-		chunk := if b64_data.len > 4096 { b64_data[..4096] } else { b64_data[..b64_data.len] }
+		b64_slice := if b64_pos + 4096 < b64_data.len {
+			b64_data[b64_pos..b64_pos + 4096]
+		} else {
+			b64_data[b64_pos..]
+		}
 		// m == 0 iff the encoded data is the final chunk.
-		if b64_data.len > 4096 {
-			serialize_gr_command(chunk, 1, empty_options, mut chunk_buffer)
+		if b64_slice.len == 4096 {
+			payload := b64_slice[..4096]
+			serialize_gr_command(payload, 1, empty_options, mut chunk_buffer)
 			out.write(chunk_buffer) or { panic(err) }
 		} else {
-			serialize_gr_command(chunk, 0, empty_options, mut chunk_buffer)
+			payload := b64_slice
+			serialize_gr_command(payload, 0, empty_options, mut chunk_buffer)
 			out.write(chunk_buffer) or { panic(err) }
 			break
 		}
