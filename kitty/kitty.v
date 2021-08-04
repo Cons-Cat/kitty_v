@@ -27,6 +27,14 @@ pub enum Display {
 	transmit_nodisplay = 116 // `t`
 }
 
+pub fn print_png_at_point(image_data string) {
+	options := map{
+		'a': rune(Display.transmit).str()
+		'f': int(ImageFormat.png).str()
+	}
+	print_image(image_data, options)
+}
+
 // https://sw.kovidgoyal.net/kitty/graphics-protocol
 pub fn print_image(image_data string, image_options Options) {
 	mut out := os.stdout()
