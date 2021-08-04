@@ -93,16 +93,12 @@ fn main() {
 		println(fp.usage())
 		return
 	}
-	image_data := os.read_file(image_path) or { panic('Could not open a PNG at $image_path') }
-	// options := map{
-	// 	'a': rune(kitty.Display.transmit).str()
-	// 	'f': int(kitty.ImageFormat.rgb).str()
-	// 	's': int(ppm_width).str()
-	// 	'v': int(ppm_height).str()
-	// }
-	// ppm := PPM{
-	// 	data: ppm_data
-	// }
-	// kitty.print_image(ppm.to_string(), options)
-	kitty.print_png_at_point(image_data)
+
+	image_data := os.read_file(image_path) or {''}
+	// kitty.print_png_at_point(image_data)
+
+	ppm := PPM{
+		data: ppm_data
+	}
+	kitty.print_rgb_at_point(ppm.to_string(), ppm_width, ppm_height)
 }

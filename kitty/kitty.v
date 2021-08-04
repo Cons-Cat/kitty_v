@@ -31,6 +31,14 @@ pub fn print_png_at_point(image_data string) {
 	print_image(image_data, ',a=T,f=100')
 }
 
+pub fn print_rgb_at_point(image_data string, width u32, height u32) {
+	print_image(image_data, ',a=T,f=24,s=$width.str(),v=$height.str()')
+}
+
+pub fn print_rgba_at_point(image_data string, width u32, height u32) {
+	print_image(image_data, ',a=T,f=32,s=$width.str(),v=$height.str()')
+}
+
 // https://sw.kovidgoyal.net/kitty/graphics-protocol
 pub fn print_image(image_data string, image_options_str string) {
 	mut out := os.stdout()
