@@ -31,11 +31,11 @@ pub fn print_png_at_point(image_data []byte) {
 	print_image(image_data, ',a=T,f=100')
 }
 
-pub fn print_rgb_at_point(image_data []byte, width u32, height u32) {
+pub fn print_rgb_at_point<T>(image_data []byte, width T, height T) {
 	print_image(image_data, ',a=T,f=24,s=$width.str(),v=$height.str()')
 }
 
-pub fn print_rgba_at_point(image_data []byte, width u32, height u32) {
+pub fn print_rgba_at_point<T>(image_data []byte, width T, height T) {
 	print_image(image_data, ',a=T,f=32,s=$width.str(),v=$height.str()')
 }
 
