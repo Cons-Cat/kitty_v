@@ -3,6 +3,14 @@ module kitty
 import os
 import encoding.base64
 
+pub fn get_window_id() int {
+	return os.getenv('KITTY_WINDOW_ID').int()
+}
+
+pub fn is_running() bool {
+	return os.getenv('KITTY_WINDOW_ID').len > 0
+}
+
 type Options = map[string]string
 
 // Values of `f` key
