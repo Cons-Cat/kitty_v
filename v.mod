@@ -1,5 +1,5 @@
 Module {
-	name: 'kitty_v'
+	name: 'kitty'
 	description: ''
 	version: ''
 	license: ''
